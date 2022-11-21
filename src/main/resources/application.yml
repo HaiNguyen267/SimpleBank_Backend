@@ -1,0 +1,43 @@
+spring:
+  mail:
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: 'true'
+          auth: 'true'
+    host: smtp.gmail.com
+    username: 8.aver5eng@gmail.com
+    password: dxzctziaxgijcvtn
+    port: 587
+
+  security:
+    oauth2:
+      client:
+        registration:
+          facebook:
+            client-id: 515842626817886
+#            redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
+            client-secret: ec2ba4897ae1c0224df7c48295b572d2
+#            scope:
+#              - email
+#              - profile
+          google:
+            client-id: 1041545973974-6fhlfpt6pv44fukk40s34qh86j5pj6uk.apps.googleusercontent.com
+            client-secret: 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
+#            scope:
+#              - email
+#              - public_profile
+
+  datasource:
+    driverClassName: com.mysql.cj.jdbc.Driver
+    password: 5599
+    username: root
+    url: jdbc:mysql://localhost:3306/simple_bank
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+server:
+  error:
+    include-message: always
