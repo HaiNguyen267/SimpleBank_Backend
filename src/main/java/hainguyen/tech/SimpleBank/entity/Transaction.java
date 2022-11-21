@@ -49,5 +49,5 @@ public class Transaction {
     public String getReceiverAccountName() {
         return receiver.getFullName();
     }
-    
+
  }
