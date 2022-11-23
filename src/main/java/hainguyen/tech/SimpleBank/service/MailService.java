@@ -374,7 +374,7 @@ public class MailService {
         VerificationToken verificationToken = new VerificationToken(appUser);
         verificationTokenRepository.save(verificationToken);
 
-        String link = "http://localhost:8080/verify?token=" + verificationToken.getToken();
+        String link = "https://simplebankbackend-production.up.railway.app/verify?token=" + verificationToken.getToken();
         String html = generateHTML(appUser.getFullName(), link);
         sendMail(appUser.getEmail(), "Verify your email for SimpleBank account", html);
     }
