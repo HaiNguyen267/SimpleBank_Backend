@@ -1,7 +1,7 @@
 package hainguyen.tech.SimpleBank.security.jwtFilters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import hainguyen.tech.SimpleBank.dto.CustomResponseDTO;
+import hainguyen.tech.SimpleBank.dto.response.CustomResponse;
 import hainguyen.tech.SimpleBank.security.AppUserPrincipal;
 import hainguyen.tech.SimpleBank.security.JwtProvider;
 import hainguyen.tech.SimpleBank.service.CustomUserDetailsService;
@@ -9,7 +9,6 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -65,7 +64,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     private void sendErrorResponse(HttpServletResponse response, String message) throws IOException {
         response.setContentType(APPLICATION_JSON_VALUE);
-        CustomResponseDTO customResponseDTO = new CustomResponseDTO(false, message);
+        CustomResponse customResponseDTO = new CustomResponse(false, message);
         new ObjectMapper().writeValue(response.getOutputStream(), customResponseDTO);
     }
 }

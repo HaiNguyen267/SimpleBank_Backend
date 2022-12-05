@@ -1,4 +1,4 @@
-package hainguyen.tech.SimpleBank.dto;
+package hainguyen.tech.SimpleBank.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,6 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class OAuthLoginDTO {
-    private String accessToken;
+public class DepositRequest {
+    private int amount;
 }

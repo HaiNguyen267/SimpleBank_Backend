@@ -5,8 +5,12 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.oauth2.Oauth2;
 import com.google.api.services.oauth2.model.Userinfoplus;
-import hainguyen.tech.SimpleBank.dto.*;
-import hainguyen.tech.SimpleBank.dto.response.UserInfoResponseDTO;
+import hainguyen.tech.SimpleBank.dto.request.LoginRequest;
+import hainguyen.tech.SimpleBank.dto.request.OAuthLogin;
+import hainguyen.tech.SimpleBank.dto.request.SignUpRequest;
+import hainguyen.tech.SimpleBank.dto.response.CustomResponse;
+import hainguyen.tech.SimpleBank.dto.response.LoginResponse;
+import hainguyen.tech.SimpleBank.dto.response.UserInfoResponse;
 import hainguyen.tech.SimpleBank.entity.AppUser;
 import hainguyen.tech.SimpleBank.entity.VerificationToken;
 import hainguyen.tech.SimpleBank.repository.AppUserRepository;
@@ -28,8 +32,6 @@ import org.springframework.web.server.ResponseStatusException;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 import java.io.IOException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -49,7 +51,7 @@ public class AuthService {
 
     public ResponseEntity<?> handleLoginRequest(LoginRequest loginRequest, HttpServletResponse response) {
         if (!checkIfEmailExist(loginRequest.getUsername())) {
-            return ResponseEntity.ok().body(new CustomResponseDTO(false, "Username or password is incorrect!")); // email incorrect
+            return ResponseEntity.ok().body(new CustomResponse(false, "Username or password is incorrect!")); // email incorrect
         }
 
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken
@@ -59,15 +61,15 @@ public class AuthService {
         // if login successfully, generate token and return to client
         if (authentication.isAuthenticated()) {
 
-            LoginResponseDTO loginResponseDTO = createJwtResponse(jwtProvider.create(authentication));
+            LoginResponse loginResponseDTO = createJwtResponse(jwtProvider.create(authentication));
             return ResponseEntity.ok(loginResponseDTO);
         } else {
-            return ResponseEntity.ok().body(new CustomResponseDTO(false, "Username or password is incorrect!")); // password incorrect
+            return ResponseEntity.ok().body(new CustomResponse(false, "Username or password is incorrect!")); // password incorrect
         }
     }
 
     @Transactional
-    public ResponseEntity<?> handleOauthLogin(OAuthLoginDTO oauthLogin, HttpServletResponse response) {
+    public ResponseEntity<?> handleOauthLogin(OAuthLogin oauthLogin, HttpServletResponse response) {
         try {
             Userinfoplus userInfo = getUserInfoFromGoogleAPI(oauthLogin.getAccessToken());
             AppUser appUser = null;
@@ -89,19 +91,19 @@ public class AuthService {
             }
 
 
-            LoginResponseDTO loginResponseDTO = createJwtResponse(jwtProvider.create(appUser));
+            LoginResponse loginResponseDTO = createJwtResponse(jwtProvider.create(appUser));
             return ResponseEntity.ok(loginResponseDTO);
 
         } catch (IOException e) {
-            return ResponseEntity.ok(new CustomResponseDTO(false, "Login failed!"));
+            return ResponseEntity.ok(new CustomResponse(false, "Login failed!"));
 
         }
     }
 
-    public ResponseEntity<?> signUp(SignUpRequestDTO signUpRequestDTO) {
+    public ResponseEntity<?> signUp(SignUpRequest signUpRequestDTO) {
 
         if (checkIfEmailExist(signUpRequestDTO.getEmail())) {
-            CustomResponseDTO customResponseDTO = new CustomResponseDTO(false,  "Email already exist");
+            CustomResponse customResponseDTO = new CustomResponse(false,  "Email already exist");
             return ResponseEntity.ok().body(customResponseDTO);
         }
 
@@ -120,7 +122,7 @@ public class AuthService {
         appUser = appUserRepository.save(appUser);
         mailService.sendVerificationEmail(appUser);
 
-        LoginResponseDTO loginResponseDTO = createJwtResponse(jwtProvider.create(appUser));
+        LoginResponse loginResponseDTO = createJwtResponse(jwtProvider.create(appUser));
         return ResponseEntity.ok(loginResponseDTO);
 
     }
@@ -132,13 +134,13 @@ public class AuthService {
         appUser.setEnabled(true);
         appUserRepository.save(appUser);
 
-        return ResponseEntity.ok(new CustomResponseDTO(true, "Email verified successfully!"));
+        return ResponseEntity.ok(new CustomResponse(true, "Email verified successfully!"));
     }
 
 
-    private LoginResponseDTO createJwtResponse(String jwtProvider) {
+    private LoginResponse createJwtResponse(String jwtProvider) {
         String jwtToken = jwtProvider;
-        LoginResponseDTO loginResponseDTO = new LoginResponseDTO(true, jwtToken);
+        LoginResponse loginResponseDTO = new LoginResponse(true, jwtToken);
         return loginResponseDTO;
     }
 
@@ -183,7 +185,21 @@ public class AuthService {
         return userinfo;
     }
 
+    public ResponseEntity<?> getUserInfo(String jwtToken) {
+        try {
 
+            Claims claims = jwtProvider.getClaims(jwtToken);
+            String email = claims.getSubject();
+            AppUser appUser = getAppUserByEmail(email);
+            UserInfoResponse userInfoResponseDTO = new UserInfoResponse(appUser, "Fetch user info successfully");
+
+            return ResponseEntity.ok(userInfoResponseDTO);
+        } catch (ExpiredJwtException e) {
+            return ResponseEntity.ok(new CustomResponse(false, "Token expired"));
+        } catch (Exception e) {
+            return ResponseEntity.ok(new CustomResponse(false, "Token invalid"));
+        }
+    }
     public boolean checkIfEmailExist(String email) {
         return appUserRepository.findByEmailIgnoreCase(email).isPresent();
     }
@@ -193,19 +209,4 @@ public class AuthService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 
-    public ResponseEntity<?> getUserInfo(String jwtToken) {
-        try {
-
-            Claims claims = jwtProvider.getClaims(jwtToken);
-            String email = claims.getSubject();
-            AppUser appUser = getAppUserByEmail(email);
-            UserInfoResponseDTO userInfoResponseDTO = new UserInfoResponseDTO(appUser, "Fetch user info successfully");
-
-            return ResponseEntity.ok(userInfoResponseDTO);
-        } catch (ExpiredJwtException e) {
-            return ResponseEntity.ok(new CustomResponseDTO(false, "Token expired"));
-        } catch (Exception e) {
-            return ResponseEntity.ok(new CustomResponseDTO(false, "Token invalid"));
-        }
-    }
 }

@@ -1,13 +1,13 @@
-package hainguyen.tech.SimpleBank.dto;
+package hainguyen.tech.SimpleBank.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class LoginResponseDTO {
+@AllArgsConstructor
+public class CustomResponse {
     private boolean success;
-    private String jwtToken;
+    private String message;
 }

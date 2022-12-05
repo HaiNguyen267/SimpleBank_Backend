@@ -1,4 +1,4 @@
-package hainguyen.tech.SimpleBank.dto;
+package hainguyen.tech.SimpleBank.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,9 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SignUpRequestDTO {
-    private String firstname;
-    private String lastname;
-    private String email;
+public class LoginRequest {
+    private String username;
     private String password;
 }

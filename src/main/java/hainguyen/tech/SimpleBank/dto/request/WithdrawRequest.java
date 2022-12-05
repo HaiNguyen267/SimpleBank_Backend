@@ -1,4 +1,4 @@
-package hainguyen.tech.SimpleBank.dto;
+package hainguyen.tech.SimpleBank.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

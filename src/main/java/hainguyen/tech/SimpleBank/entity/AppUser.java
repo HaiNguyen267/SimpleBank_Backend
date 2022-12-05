@@ -2,7 +2,7 @@ package hainguyen.tech.SimpleBank.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import hainguyen.tech.SimpleBank.dto.TransactionDTO;
+import hainguyen.tech.SimpleBank.dto.response.TransactionDTO;
 import hainguyen.tech.SimpleBank.security.AuthenticationProvider;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,8 +16,7 @@ import java.util.stream.Collectors;
 
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY;
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
-import static hainguyen.tech.SimpleBank.entity.Transaction.TransactionType.IN;
-import static hainguyen.tech.SimpleBank.entity.Transaction.TransactionType.OUT;
+import static hainguyen.tech.SimpleBank.entity.Transaction.TransactionType.*;
 
 @Entity
 @NamedQueries({
@@ -61,7 +60,7 @@ public class AppUser {
     private AuthenticationProvider provider;
 
     @JsonProperty(access = READ_ONLY)
-    @ManyToMany(cascade =  CascadeType.REMOVE)
+    @OneToMany(cascade =  CascadeType.REMOVE)
     private List<Transaction> transactions;
 
 
@@ -95,15 +94,15 @@ public class AppUser {
     public List<TransactionDTO> getTransactions() {
         List<TransactionDTO> transactionList = transactions.stream().map(transaction -> {
             // if the current appUser is the sender, then the transaction is out transaction, otherwise
-            Transaction.TransactionType type
-                    = transaction.getSenderAccountNo()
-                    .equals(accountNo) ? OUT : IN;
 
-            String accountNo = type == OUT ? transaction.getReceiverAccountNo() : transaction.getSenderAccountNo();
-            String accountName = type == OUT ? transaction.getReceiverAccountName() : transaction.getSenderAccountName();
+
+            Transaction.TransactionType type = identifyTransactionType(transaction); // deposit, withdraw, in or out
+            String targetAccountNo = identifyTransactionAccountNo(transaction); // the account no where the transaction is sent to or sent from
+            String targetAccountName = identifyTransactionAccountName(transaction); // the account name where the transaction is sent to or sent from
+
             TransactionDTO transactionDTO = TransactionDTO.builder()
-                    .accountNo(accountNo)
-                    .accountName(accountName)
+                    .accountNo(targetAccountNo) // deposit and withdraw transaction don't have target account no
+                    .accountName(targetAccountName) // deposit and withdraw transaction don't have target account name
                     .amount(transaction.getAmount())
                     .date(transaction.getDate())
                     .message(transaction.getMessage())
@@ -114,5 +113,52 @@ public class AppUser {
         }).collect(Collectors.toList());
         Collections.reverse(transactionList); // reverse the list, so that the latest transaction is on top
         return transactionList;
+    }
+
+
+    private Transaction.TransactionType identifyTransactionType(Transaction transaction) {
+        Transaction.TransactionType type;
+        // out transaction can be transaction to other account or withdraw
+        if (transaction.getSenderAccountNo().equals(accountNo)) {
+            if (transaction.getReceiver() == null) {
+                type = WITHDRAW;
+            } else {
+                type = OUT;
+            }
+        } else {
+            // in transaction can be transaction from other account or deposit
+            if (transaction.getSender() == null) {
+                type = DEPOSIT;
+            } else {
+                type = IN;
+            }
+        }
+        return type;
+    }
+
+    private String identifyTransactionAccountNo(Transaction transaction) {
+
+        Transaction.TransactionType type = identifyTransactionType(transaction);
+
+        if (type == OUT) {
+            return transaction.getReceiverAccountNo();
+        } else if (type == IN) {
+            return transaction.getSenderAccountNo();
+        } else {
+            return null;
+        }
+    }
+
+    private String identifyTransactionAccountName(Transaction transaction) {
+
+        Transaction.TransactionType type = identifyTransactionType(transaction);
+
+        if (type == OUT) {
+            return transaction.getReceiverAccountName();
+        } else if (type == IN) {
+            return transaction.getSenderAccountName();
+        } else {
+            return null;
+        }
     }
 }

@@ -19,7 +19,7 @@ import java.util.Date;
 public class Transaction {
 
     public enum TransactionType {
-        IN, OUT
+        IN, OUT, DEPOSIT, WITHDRAW
     }
 
     @Id

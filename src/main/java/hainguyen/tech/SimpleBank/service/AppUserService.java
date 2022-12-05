@@ -1,13 +1,14 @@
 package hainguyen.tech.SimpleBank.service;
 
-import hainguyen.tech.SimpleBank.dto.*;
-import hainguyen.tech.SimpleBank.dto.request.AccountNameRequest;
-import hainguyen.tech.SimpleBank.dto.response.AccountNameResponse;
-import hainguyen.tech.SimpleBank.dto.response.UserInfoResponseDTO;
+import hainguyen.tech.SimpleBank.dto.request.*;
+import hainguyen.tech.SimpleBank.dto.response.*;
 import hainguyen.tech.SimpleBank.entity.AppUser;
 import hainguyen.tech.SimpleBank.entity.Transaction;
 import hainguyen.tech.SimpleBank.exception.AccountNoNotFound;
 import hainguyen.tech.SimpleBank.repository.AppUserRepository;
+import hainguyen.tech.SimpleBank.security.JwtProvider;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -22,27 +24,38 @@ public class AppUserService  {
 
     private final AppUserRepository appUserRepository;
     private final TransactionService transactionService;
+    private final JwtProvider jwtProvider;
 
 
     public ResponseEntity<?> handleDepositRequest(DepositRequest depositRequest, String email) {
         AppUser appUser = getAppUserByEmail(email);
-        appUser.setBalance(appUser.getBalance() + depositRequest.getAmount());
-        appUserRepository.save(appUser);
+        Transaction depositTransaction = transactionService.createTransaction(null, appUser, depositRequest.getAmount(), "Account owner deposit money");
 
-        UserInfoResponseDTO response = new UserInfoResponseDTO(appUser, "Deposit successfully!");
+        appUser.setBalance(appUser.getBalance() + depositRequest.getAmount());
+        appUser.addTransaction(depositTransaction);
+
+        appUserRepository.save(appUser);
+        transactionService.save(depositTransaction);
+
+        UserInfoResponse response = new UserInfoResponse(appUser, "Deposit successfully!");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    public ResponseEntity<?> handleWithDrawRequest(WithdrawRequest withdrawRequest,  String email) {
+    public ResponseEntity<?> handleWithDrawRequest(WithdrawRequest withdrawRequest, String email) {
         AppUser appUser = getAppUserByEmail(email);
         if (appUser.getBalance() < withdrawRequest.getAmount()) {
-            CustomResponseDTO response = new CustomResponseDTO(false, "Not enough money");
+            CustomResponse response = new CustomResponse(false, "Not enough money");
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
+
+        Transaction withdrawTransaction = transactionService.createTransaction(null, appUser, withdrawRequest.getAmount(), "Account owner withdraw money");
         appUser.setBalance(appUser.getBalance() - withdrawRequest.getAmount());
+        appUser.addTransaction(withdrawTransaction);
+
+        transactionService.save(withdrawTransaction);
         appUser = appUserRepository.save(appUser);
 
-        UserInfoResponseDTO response = new UserInfoResponseDTO(appUser, "Withdraw successfully!");
+        UserInfoResponse response = new UserInfoResponse(appUser, "Withdraw successfully!");
         return new ResponseEntity<>(response, HttpStatus.OK);
 
     }
@@ -52,13 +65,13 @@ public class AppUserService  {
 
 
         if (sender.getBalance() <  transferRequest.getAmount()) {
-            CustomResponseDTO response = new CustomResponseDTO(false, "Not enough money");
+            CustomResponse response = new CustomResponse(false, "Not enough money");
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
         AppUser receiver = getAppUserByAccountNo(transferRequest.getReceiverAccountNo());
         if (sender.getAccountNo().equals(receiver.getAccountNo())) {
-            CustomResponseDTO response = new CustomResponseDTO(false, "Cannot transfer to yourself");
+            CustomResponse response = new CustomResponse(false, "Cannot transfer to yourself");
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
@@ -72,7 +85,7 @@ public class AppUserService  {
         transactionService.save(transaction);
         sender = appUserRepository.save(sender);
         receiver = appUserRepository.save(receiver);
-        UserInfoResponseDTO response = new UserInfoResponseDTO(sender, "Transfer successfully!");
+        UserInfoResponse response = new UserInfoResponse(sender, "Transfer successfully!");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -82,18 +95,19 @@ public class AppUserService  {
         return new ResponseEntity<>(transactions, HttpStatus.OK);
     }
 
-    private AppUser getAppUserByAccountNo(String accountNo) {
+    public AppUser getAppUserByAccountNo(String accountNo) {
         return appUserRepository.findByAccountNo(accountNo)
                 .orElseThrow(() -> new AccountNoNotFound("Account number not found"));
     }
 
-    public List<AppUser> getAllAppUsers() {
-        return appUserRepository.findAll();
+    public List<AppUserDTO> getAllAppUsers() {
+        return appUserRepository.findAll()
+                .stream()
+                .map(AppUserDTO::new)
+                .filter(appUserDTO -> !appUserDTO.getEmail().equals("admin")) // exclude the admin account
+                .collect(Collectors.toList());
     }
 
-    public void save(AppUser appUser) {
-        appUserRepository.save(appUser);
-    }
 
     public AppUser getAppUserByEmail(String username) {
         return appUserRepository.findByEmailIgnoreCase(username)
@@ -103,6 +117,14 @@ public class AppUserService  {
     public ResponseEntity<?> getAccountName(AccountNameRequest accountNameRequest) {
         AppUser appUser = getAppUserByAccountNo(accountNameRequest.getAccountNo());
         AccountNameResponse response = new AccountNameResponse(true, appUser.getFullName());
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+    public ResponseEntity<?> deleteUserByAccountNo(String accountNo) {
+        AppUser appUser = getAppUserByAccountNo(accountNo);
+        appUserRepository.delete(appUser);
+        CustomResponse response = new CustomResponse(true, "Delete user successfully");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

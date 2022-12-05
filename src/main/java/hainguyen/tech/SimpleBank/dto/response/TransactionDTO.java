@@ -1,4 +1,4 @@
-package hainguyen.tech.SimpleBank.dto;
+package hainguyen.tech.SimpleBank.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import hainguyen.tech.SimpleBank.entity.AppUser;

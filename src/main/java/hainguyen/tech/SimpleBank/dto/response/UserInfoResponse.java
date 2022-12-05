@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserInfoResponseDTO {
+public class UserInfoResponse {
     private boolean success;
     private String message;
     private String accountNo;
@@ -19,7 +19,7 @@ public class UserInfoResponseDTO {
     private int balance;
     private String profileImage;
 
-    public UserInfoResponseDTO(AppUser appUser, String message) {
+    public UserInfoResponse(AppUser appUser, String message) {
         this.success = true;
         this.message = message;
         this.accountNo = appUser.getAccountNo();
