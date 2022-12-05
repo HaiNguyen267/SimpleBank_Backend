@@ -27,9 +27,9 @@ public class TransactionService {
 //    }
 
     public Transaction createTransaction(AppUser sender, AppUser receiver, int amount, String message) {
-        Date now = new Date(System.currentTimeMillis());
+
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-        String formattedDate = formatter.format(now);
+        String formattedDate = formatter.format(LocalDateTime.now());
         return Transaction.builder()
                 .amount(amount)
                 .sender(sender)
