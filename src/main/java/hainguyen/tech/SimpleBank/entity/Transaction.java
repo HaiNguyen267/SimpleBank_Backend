@@ -35,18 +35,22 @@ public class Transaction {
     private AppUser receiver;
 
     public String getSenderAccountNo() {
+        if (sender == null) return null; // for deposit transaction
         return sender.getAccountNo();
     }
 
     public String getSenderAccountName() {
+        if (sender == null) return null; // for deposit transaction
         return sender.getFullName();
     }
 
     public String getReceiverAccountNo() {
+        if (receiver == null) return null; // for withdraw transaction
         return receiver.getAccountNo();
     }
 
     public String getReceiverAccountName() {
+        if (receiver == null) return null; // for withdraw transaction
         return receiver.getFullName();
     }
 
