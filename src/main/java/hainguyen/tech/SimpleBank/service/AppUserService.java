@@ -34,8 +34,8 @@ public class AppUserService  {
 //        appUser.setBalance(appUser.getBalance() + depositRequest.getAmount());
         appUser.addTransaction(depositTransaction);
 
-        appUserRepository.save(appUser);
         transactionService.save(depositTransaction);
+        appUserRepository.save(appUser);
 
         UserInfoResponse response = new UserInfoResponse(appUser, "Deposit successfully!");
         return new ResponseEntity<>(response, HttpStatus.OK);
