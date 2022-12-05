@@ -124,7 +124,7 @@ public class AppUser {
     private Transaction.TransactionType identifyTransactionType(Transaction transaction) {
         Transaction.TransactionType type;
         // out transaction can be transaction to other account or withdraw
-        if (transaction.getSenderAccountNo().equals(accountNo)) {
+        if (Objects.equals(transaction.getSenderAccountNo(), accountNo)) {
             if (transaction.getReceiver() == null) {
                 type = WITHDRAW;
             } else {
