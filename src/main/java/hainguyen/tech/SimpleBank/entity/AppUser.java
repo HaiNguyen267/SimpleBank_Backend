@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import javax.persistence.*;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY;
@@ -66,12 +67,16 @@ public class AppUser {
 
     public void addTransaction(Transaction transaction) {
         transactions.add(transaction);
-        boolean isOutTransaction = transaction.getSenderAccountNo().equals(accountNo);
+        boolean isOutTransaction = checkIsOutTransaction(transaction);
         if (isOutTransaction) {
             balance -= transaction.getAmount();
         } else {
             balance += transaction.getAmount();
         }
+    }
+
+    private boolean checkIsOutTransaction(Transaction transaction) {
+        return Objects.equals(accountNo, transaction.getSenderAccountNo());
     }
 
     public List<String> getRoles() {
