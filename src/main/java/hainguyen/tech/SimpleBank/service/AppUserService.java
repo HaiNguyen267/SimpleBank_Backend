@@ -31,7 +31,7 @@ public class AppUserService  {
         AppUser appUser = getAppUserByEmail(email);
         Transaction depositTransaction = transactionService.createTransaction(null, appUser, depositRequest.getAmount(), "Account owner deposit money");
 
-        appUser.setBalance(appUser.getBalance() + depositRequest.getAmount());
+//        appUser.setBalance(appUser.getBalance() + depositRequest.getAmount());
         appUser.addTransaction(depositTransaction);
 
         appUserRepository.save(appUser);
@@ -48,8 +48,8 @@ public class AppUserService  {
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
-        Transaction withdrawTransaction = transactionService.createTransaction(null, appUser, withdrawRequest.getAmount(), "Account owner withdraw money");
-        appUser.setBalance(appUser.getBalance() - withdrawRequest.getAmount());
+        Transaction withdrawTransaction = transactionService.createTransaction(appUser, null, withdrawRequest.getAmount(), "Account owner withdraw money");
+//        appUser.setBalance(appUser.getBalance() - withdrawRequest.getAmount());
         appUser.addTransaction(withdrawTransaction);
 
         transactionService.save(withdrawTransaction);
