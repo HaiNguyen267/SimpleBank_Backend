@@ -13,10 +13,9 @@ spring:
 
   datasource:
     driverClassName: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-
+    url: jdbc:mysql:containers-us-west-57.railway.app:6677/railway
+    username: root
+    password: ucVLE1foUopXyNpN7kQw
   jpa:
     show-sql: false
     hibernate:
