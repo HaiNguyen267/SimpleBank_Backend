@@ -13,7 +13,8 @@ spring:
 
   datasource:
     driverClassName: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql:containers-us-west-57.railway.app:6677/railway
+    url: jdbc:mysql://containers-us-west-57.railway.app:6677/railway
+
     username: root
     password: ucVLE1foUopXyNpN7kQw
   jpa:
